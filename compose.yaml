@@ -1,0 +1,44 @@
+name: expense-tracker
+services:
+  db:
+    image: mysql:8.0.37
+    container_name: mysql_container
+    env_file:
+      - .env
+    volumes:
+      - type: volume
+        target: /var/lib/mysql
+        source: 4c9ed89e3233899efb5098f1bf71722204725c83d879c96dc5a07318f40b2cef
+  backend:
+    build: .
+    container_name: expense_api
+    depends_on:
+      - db
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: vip
+      restart_policy:
+        condition: on-failure
+        max_attempts: 2
+        window: 120ms
+        delay: 5s
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 120M
+        reservations:
+          cpus: '0.25'
+          memory: 80M
+    ports:
+      - "8080:8080"
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+    env_file:
+      - .env
+volumes:
+  4c9ed89e3233899efb5098f1bf71722204725c83d879c96dc5a07318f40b2cef:
+    external: true
